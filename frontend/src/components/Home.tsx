@@ -1,7 +1,16 @@
-import styles from './Home.module.css'
+import { useUser } from '../hooks/useUser';
 
 const Home = () => {
-  return <div className={styles.home}>Welcome to Per Diem!</div>
-}
+  const { state: user, dispatch } = useUser();
 
-export default Home
+  if (!user) return <p>Please log in.</p>;
+
+  return (
+    <div>
+      <h1>Welcome, {user.email}</h1>
+
+    </div>
+  );
+};
+
+export default Home;

@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useUser } from './useUser'
 
-type SignupData = {
+type SignupParams = {
   email: string
   password: string
   timezone: string
@@ -8,12 +9,13 @@ type SignupData = {
 }
 
 const useSignup = () => {
+  const { dispatch } = useUser()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
-  const signup = async ({ email, password, timezone, profilepic }: SignupData) => {
+  const signup = async ({ email, password, timezone, profilepic }: SignupParams) => {
     setLoading(true)
-    setError(null)
+    setError('')
 
     try {
       const formData = new FormData()
@@ -22,17 +24,26 @@ const useSignup = () => {
       formData.append('timezone', timezone)
       if (profilepic) formData.append('profilepic', profilepic)
 
-      const res = await fetch(import.meta.env.VITE_API_URL+'/v1/user/signup', {
+      const res = await fetch(import.meta.env.VITE_API_URL + 'v1/user/signup', {
         method: 'POST',
         body: formData,
       })
 
       const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Signup failed')
 
-      console.log('Signup successful:', data)
-    } catch (err: any) {
-      setError(err.message)
+      if (!res.ok) setError(data.message || 'Signup failed')
+
+      dispatch({
+        type: 'LOGIN', // After signup, treat as logged in
+        payload: {
+          email: data.email,
+          profilepic: data.profilepic || '',
+          token: data.token,
+          timezone: data.timezone,
+        },
+      })
+    } catch  {
+      setError("something went wrong with server")
     } finally {
       setLoading(false)
     }
